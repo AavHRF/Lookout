@@ -90,12 +90,12 @@ def parse_dump() -> Iterable[Region]:
                 delegate=elm.find("DELEGATE").text,
                 founder=elm.find("FOUNDER").text,
                 update_time=int(elm.find("LASTUPDATE").text),
-                delegate_endos=int(elm.find("DELEGATEVOTES").text),
+                delegate_votes=int(elm.find("DELEGATEVOTES").text),
                 embassies=[tag.text for tag in elm.findall("EMBASSIES")],
                 _founderless=False,
                 _passworded=False,
-                _minorup=0,
-                _majorup=0,
+                _minorup="",
+                _majorup="",
             )
             # Prevent the factbook from being parsed as an Excel formula
             if retregion.wfe[0] in ['=', '+', "-", "@"]:
