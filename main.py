@@ -23,7 +23,7 @@ from time import time
 # This software is provided as-is, with no warranty or guarantee of any kind.
 # You use this software at your own risk. The responsibility for complying with API terms is yours.
 
-VERSION = "1.0.0-alpha"
+VERSION = "1.0.1-alpha"
 # Lookout adheres to semantic versioning (https://semver.org/).
 
 # A couple of globals. Yes, I know it's gross.
@@ -248,7 +248,7 @@ def main():
     for i, region in enumerate(regions):
         ws.append(
             [
-                region.name + "~" if region.valid_target else "*" if region.passworded else "",
+                f'{"~" if region.valid_target else "*" if region.passworded else ""}{region.name}',
                 f"https://www.nationstates.net/region={region.name.replace(' ', '_')}",
                 region.numnations,
                 cnations[i],
