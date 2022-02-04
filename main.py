@@ -23,7 +23,7 @@ from time import time
 # This software is provided as-is, with no warranty or guarantee of any kind.
 # You use this software at your own risk. The responsibility for complying with API terms is yours.
 
-VERSION = "1.0.0"
+VERSION = "1.0.0-alpha"
 # Lookout adheres to semantic versioning (https://semver.org/).
 
 # A couple of globals. Yes, I know it's gross.
