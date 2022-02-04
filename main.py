@@ -7,7 +7,7 @@ from xml.etree import ElementTree
 
 # File Operations
 from openpyxl import Workbook
-from openpyxl.styles import PatternFill
+from openpyxl.styles import PatternFill, Color
 import gzip
 import os
 
@@ -15,13 +15,15 @@ import os
 from sys import argv
 from typing import List, Iterable
 from datetime import datetime
+# Timing
+from time import time
 
 # Lookout: Written by Aav, released under the MIT license.
 # Inspired by Spyglass (https://github.com/khronion/Spyglass)
 # This software is provided as-is, with no warranty or guarantee of any kind.
 # You use this software at your own risk. The responsibility for complying with API terms is yours.
 
-VERSION = "1.0.0-a"
+VERSION = "1.0.0"
 # Lookout adheres to semantic versioning (https://semver.org/).
 
 # A couple of globals. Yes, I know it's gross.
@@ -98,12 +100,16 @@ def parse_dump() -> Iterable[Region]:
                 _majorup="",
             )
             # Prevent the factbook from being parsed as an Excel formula
-            if retregion.wfe[0] in ['=', '+', "-", "@"]:
-                retregion.wfe = retregion.wfe[1:]
+            if retregion.wfe:
+                if retregion.wfe[0] in ['=', '+', "-", "@"]:
+                    retregion.wfe = retregion.wfe[1:]
             if "X" in elm.find("DELEGATEAUTH").text:
                 retregion.exec_delegate = True
-            if "X" in elm.find("FOUNDERAUTH").text:
-                retregion.exec_founder = True
+            if elm.find("FOUNDERAUTH").text is not None:
+                if "X" in elm.find("FOUNDERAUTH").text:
+                    retregion.exec_founder = True
+            else:
+                retregion.exec_founder = False
             if elm.find("DELEGATE").text == "0":
                 retregion.delegate = None
             if elm.find("FOUNDER").text == "0":
@@ -161,6 +167,7 @@ def main():
     # Parse the region dump
     regions = []
     CumulNations = 0
+    start_time = time()
     for region in parse_dump():
         if region.name in passworded_regions:
             region.passworded = True
@@ -168,6 +175,8 @@ def main():
             region.founderless = True
         regions.append(region)
         CumulNations += region.numnations
+    end_time = time()
+    print(f"Parsed {len(regions)} regions in {end_time - start_time} seconds.")
 
     # Get the total number of nations that have updated by the time a region updates
     cnations = [0]
@@ -197,9 +206,9 @@ def main():
     ws = wb.active
 
     # Set up color fills
-    red = PatternFill(start_color="FF0000", end_color="FF0000", fill_type="solid")
-    yellow = PatternFill(start_color="FFF00", end_color="FFFF00", fill_type="solid")
-    green = PatternFill(start_color="00FF00", end_color="00FF00", fill_type="solid")
+    red = PatternFill(start_color=Color(indexed=2), end_color=Color(indexed=2), fill_type="solid")
+    yellow = PatternFill(start_color=Color(indexed=5), end_color=Color(indexed=5), fill_type="solid")
+    green = PatternFill(start_color=Color(indexed=11), end_color=Color(indexed=11), fill_type="solid")
 
     # These values are taken from spyglass in order to maintain compatibility with tools derived from it
     ws['L1'].value = "World"
@@ -248,20 +257,20 @@ def main():
                 region.delegate_votes,
                 region.delegate_votes - 1,
                 region.wfe,
-                ", ".join(region.embassies)
+                ", ".join(filter(lambda x: bool(x), region.embassies) or "No Embassies")
             ]
         )
         # Color-code the rows by target status
         ws.cell(row=i + 2, column=1).fill = red if not region.valid_target else green if not region.passworded and region.founderless else yellow
 
     # Save the spreadsheet
-    sheet = wb["Lookout Data"]
-    sheet.column_dimensions["A"].width = 45
+    ws.title = "Lookout Data"
+    ws.column_dimensions["A"].width = 45
 
     print("Saving spreadsheet...")
 
     # Save the spreadsheet
-    wb.save(filename=output)
+    wb.save(filename=f"{output}.xlsx")
     print("Finished!")
 
     # Clean up

@@ -10,7 +10,7 @@ class Region:
     delegate: Optional[str]
     founder: Optional[str]
     delegate_votes: Optional[int]
-    embassies: List[str]
+    embassies: List[Optional[str]]
     update_time: int
     exec_founder: bool
     exec_delegate: bool
